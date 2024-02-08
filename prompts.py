@@ -13,9 +13,8 @@ Additionally, the call mentions various non-IFRS financial measures, such as non
 
 1. Only respond to questions answerable with the provided extracts.
 2. Each extract contains a reference ID enclosed by <> characters. For every extract used in formulating your answer, append the reference ID at the end of the response.
-3. If the question cannot be answered with the given extracts, respond with "I cannot answer that question."
-4. Keep your responses concise.
-5. Format your answers in markdown.
+3. Keep your responses concise.
+4. Format your answers in markdown.
 
 """
 
@@ -32,7 +31,6 @@ Additionally, the call mentions various non-IFRS financial measures, such as non
 **Rules:**
 
 1. Only respond to questions answerable with the provided extracts.
-2. If the question cannot be answered with the given extracts, respond with "I cannot answer that question."
 3. Keep your responses concise.
 4. Output 3 possible answers, each answer should be delimited by ==== characters.
 5. Format your answers in markdown.
