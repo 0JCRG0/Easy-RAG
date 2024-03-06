@@ -26,7 +26,12 @@ logging.basicConfig(filename="/Users/juanreyesgarcia/Dev/Python/RAG/logging.log"
 load_dotenv(".env")
 LOCAL_POSTGRE_URL = os.environ.get("LOCAL_POSTGRE_URL")
 
-
+def clean_pdf(content):
+    # Split the content into lines, strip each line, and filter out any empty lines
+    lines = [line.strip() for line in content.splitlines() if line.strip()]
+    # Join the cleaned lines back into a single string with newline characters
+    cleaned_content = '\n'.join(lines)
+    return cleaned_content
 
 def clean_rows(s):
 	if not isinstance(s, str):
@@ -220,5 +225,5 @@ def to_postgre(df: pd.DataFrame):
 		cursor.close()
 		cnx.close()
 	except Exception as e:
-		logging.error(f"Exception at to_embeddings_e5_base_v2().\nException as follows: {e}.\n")
+		logging.error(f"Exception at {table}().\nException as follows: {e}.\n")
 		raise Exception
