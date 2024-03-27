@@ -9,6 +9,7 @@ from tenacity import retry, wait_exponential, retry_if_exception_type, before_sl
 import os
 import voyageai
 import tiktoken
+import anthropic
 from utils.prompts import *
 
 
@@ -21,8 +22,9 @@ logging.basicConfig(filename="/Users/juanreyesgarcia/Dev/Python/RAG/logging.log"
 load_dotenv(".env")
 
 LOCAL_POSTGRE_URL = os.environ.get("LOCAL_POSTGRE_URL")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY_")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 VOYAGE_API_KEY = os.environ.get("VOYAGE_API_KEY")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
 vo = voyageai.Client(api_key=VOYAGE_API_KEY)
 
@@ -46,17 +48,18 @@ logger.setLevel(logging.WARNING)
 
 @retry(stop=stop_after_attempt(7), wait=wait_exponential(multiplier=1, min=2, max=10), retry=retry_if_exception_type(Exception), before_sleep=before_sleep_log(logger, logging.WARNING))
 def Answer(
-	provider: str,
-	system_prompt: str,
-	formatted_extracts: str,
 	query: str,
+	formatted_extracts: str,
+	system_prompt: str,
+	provider: str = "Anthropic",
+	model: str = "claude-3-opus-20240229",
 ) -> pd.DataFrame:
 	"""
 	An AI assistant that answers a user's query with the assistance of the most similar answers
 	"""
 	
 	if provider == "OpenAI":
-		logging.info(f"""\nCALLING: "gpt-4-1106-preview" """)
+		logging.info(f"""CALLING: {model} """)
 
 		client = OpenAI(
 			api_key=OPENAI_API_KEY,
@@ -68,37 +71,65 @@ def Answer(
 				{"role": "user", "content": f"****{query}****\n####{formatted_extracts}####"}
 			],
 			
-			model="gpt-4-1106-preview",
+			model=model,
 			temperature=0,
 		)
 		
 		response_message = response.choices[0].message.content
 
 		logging.info(f"gpt_4_response:\n\n{response_message}")
+	
+	elif provider == "Anthropic":
+		client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+		response = client.messages.create(
+						model=model,
+						system=system_prompt,
+						temperature=0,
+						max_tokens=2000,
+						messages=[
+							{"role": "user", "content": f"****{query}****\n####{formatted_extracts}####"}
+						]
+					)
+		response_message = response.content[0].text
 
 	return response_message
 
 @retry(stop=stop_after_attempt(7), wait=wait_exponential(multiplier=1, min=2, max=10), retry=retry_if_exception_type(Exception), before_sleep=before_sleep_log(logger, logging.WARNING))
-def MultipleAnswers(sys_prompt: str, query:str, raw_doc: str) -> str:
+def MultipleAnswers(query:str, raw_doc: str, sys_prompt: str = multiple_answers_prompt_base, provider: str= "Anthropic", model: str = "claude-3-haiku-20240307") -> str:
 	
+	logging.info(f"""CALLING: {model} """)
 	
-	logging.info(f"""\nCALLING: "gpt-4-1106-preview" """)
 
-	client = OpenAI(
-		api_key=OPENAI_API_KEY,
-	)
+	if provider == "OpenAI":
 
-	response = client.chat.completions.create(
-		messages = [
-			{"role": "system", "content": sys_prompt},
-			{"role": "user", "content": f"****{query}****\n####{raw_doc}####"}
-		],
+		client = OpenAI(
+			api_key=OPENAI_API_KEY,
+		)
+
+		response = client.chat.completions.create(
+			messages = [
+				{"role": "system", "content": sys_prompt},
+				{"role": "user", "content": f"****{query}****\n####{raw_doc}####"}
+			],
+			
+			model="gpt-4-1106-preview",
+			temperature=0,
+		)
 		
-		model="gpt-4-1106-preview",
-		temperature=0,
-	)
+		response_message = response.choices[0].message.content
 	
-	response_message = response.choices[0].message.content
+	elif provider == "Anthropic":
+		client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+		response = client.messages.create(
+						model=model,
+						system=sys_prompt,
+						temperature=0,
+						max_tokens=2000,
+						messages=[
+							{"role": "user", "content": f"****{query}****\n####{raw_doc}####"}
+						]
+					)
+		response_message = response.content[0].text
 
 	logging.info(f"MultipleAnswers() response:\n\n{response_message}")
 
@@ -178,7 +209,7 @@ def FormatTopN(
 	token_budget = 128000
 
 	#Basically giving the most relevant IDs from the previous function
-	message = "The following are the extracts with their respective IDs from the Earnings Conference Call 2024 that you have to use to answer the user's query:"
+	message = "The following are the extracts with their respective IDs, only use this to answer the user's query:"
 
 	for id, chunk in zip(ids, chunks):
 
@@ -194,7 +225,7 @@ def FormatTopN(
 
 def AnswerDoc(keywords: list | None, query: str) -> str:
 
-	multiple_answers_output = MultipleAnswers(multiple_answers_prompt_base, query=query, raw_doc=apricot_moose_md)
+	multiple_answers_output = MultipleAnswers(query=query, raw_doc=apricot_moose_md)
 
 	answers = multiple_answers_output.split("====")
 
@@ -219,13 +250,13 @@ def AnswerDoc(keywords: list | None, query: str) -> str:
 	formatted_message = FormatTopN(accumulator)
 	logging.info(formatted_message)
 
-	final_ans = Answer("OpenAI", answer_prompt_base, formatted_message, query)
+	final_ans = Answer(query=query, formatted_extracts=formatted_message, system_prompt=answer_prompt_base)
 
 	return final_ans
 
 if __name__ == "__main__":
 	keywords = None
-	query = "What is prompt injection?"
+	query = "What is the difference between opted in and opted out consent?"
 
 	response = AnswerDoc(keywords, query)
 
