@@ -11,6 +11,7 @@ from aiohttp import ClientSession
 from pgvector.psycopg2 import register_vector
 from dotenv import load_dotenv
 import os
+import anthropic
 
 # Configure the logger with the custom format
 log_format = '%(asctime)s %(levelname)s: \n%(message)s\n'
@@ -21,6 +22,7 @@ logging.basicConfig(filename="logging.log",
 
 load_dotenv(".env")
 LOCAL_POSTGRE_URL = os.environ.get("LOCAL_POSTGRE_URL")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
 def clean_pdf(content):
     # Split the content into lines, strip each line, and filter out any empty lines
@@ -39,12 +41,6 @@ def clean_rows(s):
 	s = re.sub(r",", '', s)
 	return s
 
-def openai_ef(OPENAI_API_KEY):
-	openai_embedding = embedding_functions.OpenAIEmbeddingFunction(
-					api_key=OPENAI_API_KEY,
-					model_name="text-embedding-ada-002"
-				)
-	return openai_embedding
 
 def truncated_string(
 	string: str,
@@ -106,6 +102,22 @@ def set_dataframe_display_options():
 	pd.set_option('display.expand_frame_repr', False)  # Disable wrapping to multiple lines
 	pd.set_option('display.max_colwidth', None)  # Display full contents of each column
 
+def askAnthropic(system_prompt: str, user_content:str, model: str="claude-3-haiku-20240307"):
+	client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+	response = client.messages.create(
+				model=model,
+				max_tokens=4096,
+				system=system_prompt,
+				temperature=0.1,
+				messages=[
+					{"role": "user", "content": f"{user_content}"},
+				]
+			)
+	content = response.content[0].text
+
+	logging.info(f"{model}'s output: {content}")
+
+	return content
 
 def to_postgre(df: pd.DataFrame, table: str):
 
