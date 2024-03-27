@@ -199,29 +199,20 @@ def FetchTopN(
 	return df
 
 
-def FormatTopN(
-	df: pd.DataFrame,
-) -> str:
-
-	ids = df['id'].tolist()
-	chunks = df["chunks"].to_list()
-
-	token_budget = 128000
-
-	#Basically giving the most relevant IDs from the previous function
-	message = "The following are the extracts with their respective IDs, only use this to answer the user's query:"
-
-	for id, chunk in zip(ids, chunks):
-
-		next_id = f'\n<Reference ID:{id}>\n---Extract: {chunk}---\n'
-		if (
-			num_tokens(message + next_id, model="gpt-4")
-			> token_budget
-		):
-			break
-		else:
-			message += next_id
-	return message
+def FormatTopN(df: pd.DataFrame) -> str:
+    ids = df['id'].tolist()
+    chunks = df["chunks"].to_list()
+    token_budget = 128000
+    
+    message = "The following are the extracts with their respective IDs, only use this to answer the user's query:"
+    for id, chunk in zip(ids, chunks):
+        next_id = f'\n<Reference ID:{id}>\n---Extract: {chunk}---\n'
+        if num_tokens(message + next_id, model="gpt-4") > token_budget:
+            break
+        else:
+            message += next_id
+    
+    return message
 
 def AnswerDoc(keywords: list | None, query: str) -> str:
 
