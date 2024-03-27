@@ -1,6 +1,5 @@
 
 import re
-from chromadb.utils import embedding_functions
 import tiktoken
 import psycopg2
 import pandas as pd
@@ -8,7 +7,6 @@ import logging
 import timeit
 import json
 from datetime import datetime, timedelta
-import pyarrow.parquet as pq
 from aiohttp import ClientSession
 from pgvector.psycopg2 import register_vector
 from dotenv import load_dotenv

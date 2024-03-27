@@ -214,7 +214,7 @@ def FormatTopN(df: pd.DataFrame) -> str:
     
     return message
 
-def AnswerDoc(keywords: list | None, query: str) -> str:
+def Ask(keywords: list | None, query: str) -> str:
 
 	multiple_answers_output = MultipleAnswers(query=query, raw_doc=apricot_moose_md)
 
@@ -247,8 +247,8 @@ def AnswerDoc(keywords: list | None, query: str) -> str:
 
 if __name__ == "__main__":
 	keywords = None
-	query = "What is the difference between opted in and opted out consent?"
+	query = "What is an example of an excluded toxic prompt?"
 
-	response = AnswerDoc(keywords, query)
+	response = Ask(keywords, query)
 
 	print(response)
