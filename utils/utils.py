@@ -8,8 +8,6 @@ import logging
 import timeit
 import json
 from datetime import datetime, timedelta
-from torch import Tensor
-from transformers import AutoTokenizer, AutoModel
 import pyarrow.parquet as pq
 from aiohttp import ClientSession
 from pgvector.psycopg2 import register_vector
@@ -82,7 +80,7 @@ def count_words(text: str) -> int:
 	return len(words)
 
 
-
+"""
 def average_pool(last_hidden_states: Tensor,
 				attention_mask: Tensor) -> Tensor:
 	last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
@@ -98,7 +96,7 @@ def e5_base_v2_query(query):
 
 	outputs = model(**batch_dict)
 	query_embedding = average_pool(outputs.last_hidden_state, batch_dict['attention_mask']).detach().numpy().flatten()
-	return query_embedding
+	return query_embedding"""
 
 def filter_last_two_weeks(df:pd.DataFrame) -> pd.DataFrame:
 	# Get the current date
@@ -129,9 +127,8 @@ def set_dataframe_display_options():
 	pd.set_option('display.max_colwidth', None)  # Display full contents of each column
 
 
-def to_postgre(df: pd.DataFrame):
+def to_postgre(df: pd.DataFrame, table: str):
 
-	table = "fast_rag"
 	db_url = LOCAL_POSTGRE_URL
 
 	try:
