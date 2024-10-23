@@ -20,7 +20,6 @@ logging.basicConfig(filename="logging.log",
 	level=logging.INFO,
 	format=log_format)
 
-load_dotenv(".env")
 LOCAL_POSTGRE_URL = os.environ.get("LOCAL_POSTGRE_URL")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 

@@ -13,13 +13,7 @@ import anthropic
 from utils.prompts import *
 
 
-log_format = '%(asctime)s %(levelname)s: \n%(message)s\n'
 
-logging.basicConfig(filename="/Users/juanreyesgarcia/Dev/Python/RAG/logging.log",
-	level=logging.INFO,
-	format=log_format)
-
-load_dotenv(".env")
 
 LOCAL_POSTGRE_URL = os.environ.get("LOCAL_POSTGRE_URL")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
