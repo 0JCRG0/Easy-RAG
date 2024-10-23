@@ -1,0 +1,3 @@
+1.	"Artificial intelligence is transforming the medical field with new diagnostic and treatment options."
+2.	"Machine learning is increasingly used for analyzing large data sets in finance."
+3.	"Recent advancements in natural language processing include better context understanding."
